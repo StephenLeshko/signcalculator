@@ -5,9 +5,11 @@ import * as tf from "@tensorflow/tfjs";
 import * as handPoseDetection from "@tensorflow-models/hand-pose-detection";
 import Webcam from "react-webcam";
 import './App.css';
+import NumScreen from "./NumScreen"
 
 import * as fp from "fingerpose";
 
+//import gestures
 import {zeroGesture} from "./gestures/zero";
 import {oneGesture} from "./gestures/one";
 import {twoGesture} from "./gestures/two";
@@ -16,11 +18,13 @@ import {fourGesture} from "./gestures/four";
 import {fiveGesture} from "./gestures/five";
 
 
+
+
 function App() {
 
   const webcamRef = useRef(null);
   const canvasRef = useRef(null); 
-
+  const [digit, setDigit] = useState(0);
   //creating detector
   
 
@@ -105,6 +109,7 @@ function App() {
         }
         if(total != null){
           console.log('Total: ' + String(total))
+          setDigit(total)
         }
       }
     }
@@ -122,8 +127,9 @@ function App() {
           ref={webcamRef}
           style={{
             position: "absolute",
-            marginLeft: "auto",
+            marginLeft: 0,
             marginRight: "auto",
+
             left: 0,
             right: 0,
             textAlign: "center",
@@ -133,6 +139,7 @@ function App() {
           }}
           mirrored={true}
         />
+      
       <canvas
           ref={canvasRef}
           style={{
@@ -148,6 +155,7 @@ function App() {
           }}
           
         />
+        <NumScreen digit={digit}/>
 
       </header>
     </div>
