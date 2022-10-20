@@ -23,8 +23,10 @@ import {fiveGesture} from "./gestures/five";
 function App() {
 
   const webcamRef = useRef(null);
-  const canvasRef = useRef(null); 
-  const [digit, setDigit] = useState(0);
+  // const canvasRef = useRef(null); 
+  const [comp, setComp] = useState('');
+
+  const [data, setData] = useState({comps: []})
   //creating detector
   
 
@@ -56,8 +58,8 @@ function App() {
       webcamRef.current.video.height = videoHeight;
 
       // Set canvas height and width
-      canvasRef.current.width = videoWidth;
-      canvasRef.current.height = videoHeight;
+      // canvasRef.current.width = videoWidth;
+      // canvasRef.current.height = videoHeight;
       const hands = await detector.estimateHands(video)
       if(hands.length > 0){
         //iterate over each hand
@@ -109,7 +111,10 @@ function App() {
         }
         if(total != null){
           console.log('Total: ' + String(total))
-          setDigit(total)
+          console.log('Digit:' + comp)
+          setComp((value) => {
+            return value + total.toString();
+          })
         }
       }
     }
@@ -123,40 +128,16 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-      <Webcam
-          ref={webcamRef}
-          style={{
-            position: "absolute",
-            marginLeft: 0,
-            marginRight: "auto",
-
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            zindex: 9,
-            width: 640,
-            height: 480,
-          }}
-          mirrored={true}
+      <div className="line">
+        <Webcam
+            ref={webcamRef}
+            mirrored={true}
+            className='cam elm-border'
         />
-      
-      <canvas
-          ref={canvasRef}
-          style={{
-            position: "absolute",
-            marginLeft: "auto",
-            marginRight: "auto",
-            left: 0,
-            right: 0,
-            textAlign: "center",
-            zindex: 9,
-            width: 640,
-            height: 480,
-          }}
-          
-        />
-        <NumScreen digit={digit}/>
-
+        <NumScreen className="elm-border"comp={comp}/>
+      </div>
+      <h1 className="title-text">Sign Calc</h1>
+      <p className="explanation">Use your fingers and hand motions to perform computations</p>
       </header>
     </div>
   );

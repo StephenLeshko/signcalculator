@@ -1,30 +1,96 @@
 .App {
-  text-align: center;
+  /* text-align: center; */
 }
 
-.display{
-  max-width: 400px;
-  min-width: 300px;
-  display: flex;
-  float: right;
-  color: #ffffff;
-  background-color: #5ce7ff;
-  flex-direction: row;
-  justify-content: center;
-  /* margin-left: auto; */
+.elm-border{
+  border: 2px solid #505d5d;
 }
 
 p{
-  font-size: 72px;
+  margin:0;
+  line-height: 70px;
+  padding:0;
+  align-content: flex-start;
 }
+
+.title-text{
+  text-align: left;
+  font-size: 60px;
+  padding:0;
+  margin:0;
+  font-style: italic;
+}
+.explanation{
+  text-align: center;
+  font-size:30px;
+  color: #ffffff;
+}
+
+
+.calc-display{
+  /* max-width: 400px; */
+  /* min-width: 300px; */
+  /* width: 900px; */
+  text-align: right;
+  justify-content: baseline;
+  /* align-items: flex-start; */
+  margin-left:30px;
+  margin-top: 10px;
+  margin-right: 10px;
+  max-height: 120px;
+  /* justify-content: space-around; */
+  color: #000000;
+  overflow:auto;
+  background-color: #5ce7ff;
+  /* margin-left: auto; */
+  flex-grow: 1;
+}
+
+.calc-display::-webkit-scrollbar{
+  width:4px;
+  height:6px; 
+  background: #505d5d;
+}
+
+.calc-display::-webkit-scrollbar-thumb{
+  background: #aaa;
+  align-items: center;
+  border-radius:15px;
+}
+
+.digits{
+  font-size: 90px;
+}
+
+.cam{
+  /* position: "absolute"; */
+  margin-left: 0;
+  margin-right: "auto";
+  left: 0;
+  top:0;
+  right: 0;
+  z-index: 9;
+  width: 640;
+  height: 480;
+}
+
+.line{
+  display: flex;
+  /* flex-wrap: wrap; */
+  /* margin: 0; */
+  justify-content: space-between;
+  /* align-items: stretch; */
+}
+
 
 .App-header {
   background-color: #ef89c4;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: left;
+  /* display: flex; */
+  margin:0;
+  /* flex-direction: column; */
+  /* align-items: center; */
+  /* justify-content: left; */
   font-size: calc(10px + 2vmin);
   color: white;
 }
