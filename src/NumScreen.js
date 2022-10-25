@@ -1,16 +1,28 @@
-function NumScreen({comp}){
+import React, {useEffect, useRef} from "react";
+
+
+function NumScreen({comps}){
+    const screenRef = useRef(null)
+    useEffect(() =>{
+        console.log('resetting scroll')
+        // screenRef.current.scrollTop = screenRef.current.scrollHeight
+        // screenRef.current.scrollLeft = screenRef.current.scrollWidth
+    })
     
     const showComps = (comp) =>{
         return (
-            <p>{comp}</p>
+            
+            <div>
+                <p>{comp}</p>
+                <hr></hr>
+            </div>
+            
         )
     }
     
     return (
-        <div className='elm-border digits calc-display'>
-            <p>{comp}</p>
-            <p>123456 + 8</p> 
-            <p>99 / 0</p> 
+        <div ref={screenRef} className='elm-border digits calc-display'>
+            {comps.map(showComps)}
         </div>
             
 

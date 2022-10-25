@@ -23,10 +23,12 @@ import {fiveGesture} from "./gestures/five";
 function App() {
 
   const webcamRef = useRef(null);
+  const numScreenRef = useRef(null);
   // const canvasRef = useRef(null); 
-  const [comp, setComp] = useState('');
-
+  // const [comp, setComp] = useState('');
   const [data, setData] = useState({comps: []})
+  
+  
   //creating detector
   
 
@@ -109,19 +111,32 @@ function App() {
 
           }
         }
+
+        //setting
         if(total != null){
           console.log('Total: ' + String(total))
-          console.log('Digit:' + comp)
-          setComp((value) => {
-            return value + total.toString();
-          })
+          
+          const comps = data['comps']
+          // console.log('Comps' + comps)
+          if(comps.length === 0){
+            comps.push(total.toString())
+          }else if(comps[comps.length - 1].length > 30){
+            comps.push(total.toString())
+          }else{
+            comps[comps.length - 1] = comps[comps.length - 1] + total.toString()
+          }
+
+          setData({comps: comps})
+          // setComp((value) => {
+          //   return value + total.toString();
+          // })
         }
       }
     }
   }
   useEffect(()=>{guessHands()},[]);
 
-
+  // guessHands()
 
 
   /*        RETURN VALUE         */
@@ -134,7 +149,7 @@ function App() {
             mirrored={true}
             className='cam elm-border'
         />
-        <NumScreen className="elm-border"comp={comp}/>
+        <NumScreen className="elm-border" comps={data['comps']}/>
       </div>
       <h1 className="title-text">Sign Calc</h1>
       <p className="explanation">Use your fingers and hand motions to perform computations</p>
