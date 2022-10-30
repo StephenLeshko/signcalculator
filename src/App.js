@@ -16,6 +16,7 @@ import {twoGesture} from "./gestures/two";
 import {threeGesture} from "./gestures/three";
 import {fourGesture} from "./gestures/four";
 import {fiveGesture} from "./gestures/five";
+import {equalsGesture} from "./gestures/equals";
 
 
 
@@ -28,14 +29,21 @@ function App() {
   // const [comp, setComp] = useState('');
   const [data, setData] = useState({comps: []})
   
+  let count = 0; //stores the amount of times a gesture has been seen
+  let handStates = [] //stores the landmark info; gets cleared when count reverts to zero
+  //when count is at last value, it runs a function on the handStates
+  //function checks to see what kind of movement is going on...
+  //After this happens, count is changed, screen state is updated
   
+
+
   //creating detector
   
 
   const guessHands = async () => {
     const model = handPoseDetection.SupportedModels.MediaPipeHands;
     const detectorConfig = {
-      runtime: 'tfjs', // or 'tfjs'
+      runtime: 'tfjs', 
       modelType: 'full'
     };
     const detector = await handPoseDetection.createDetector(model, detectorConfig);
@@ -76,7 +84,8 @@ function App() {
             twoGesture,
             threeGesture,
             fourGesture,
-            fiveGesture
+            fiveGesture,
+            equalsGesture
           ])
 
           //convert the keypoints to 'landmarks'
@@ -91,25 +100,55 @@ function App() {
             landmarks.push(arr)
           }
 
-          const gesture = await GE.estimate(landmarks, 4);
-          // console.log('Gesture: ')
-          // console.log(gesture.poseData)
-          if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+          handStates.push(landmarks);
+          count += 1;
+          
+          if(count >=5){
+            const gestures = handStates.map((landmark) => {
+              const gesture = GE.estimate(landmark, 4)
+              console.log(gesture)
+              if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+                  const confidence = gesture.gestures.map(
+                    (prediction) => prediction.score
+                  );
+                  const maxConfidence = confidence.indexOf(
+                    Math.max.apply(null, confidence)
+                  ); 
+                  return gesture.gestures[maxConfidence].name
   
-            const confidence = gesture.gestures.map(
-              (prediction) => prediction.score
-            );
-            const maxConfidence = confidence.indexOf(
-              Math.max.apply(null, confidence)
-            );
-            // console.log(gesture.gestures[maxConfidence].name)
-            if(total === null){
-              total = gesture.gestures[maxConfidence].name
-            }else{
-              total += gesture.gestures[maxConfidence].name
-            }
-
+              }  
+            })
+            console.log(gestures)
+            handStates.length = 0
+            count = 0
           }
+
+
+
+          // --------------OLD DETECTION CODE---------------
+
+          // const gesture = await GE.estimate(landmarks, 4);
+          // // console.log('Gesture: ')
+          // // console.log(gesture)
+          // if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+  
+          //   const confidence = gesture.gestures.map(
+          //     (prediction) => prediction.score
+          //   );
+          //   const maxConfidence = confidence.indexOf(
+          //     Math.max.apply(null, confidence)
+          //   ); //gets the index of the gesture with the max certainty
+          //   // console.log(gesture.gestures[maxConfidence].name)
+
+
+          //   //This is where the math can happen... 
+          //   if(total === null){
+          //     total = gesture.gestures[maxConfidence].name
+          //   }else{
+          //     total += gesture.gestures[maxConfidence].name
+          //   }
+
+          // }
         }
 
         //setting
