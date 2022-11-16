@@ -18,9 +18,6 @@ import {fourGesture} from "./gestures/four";
 import {fiveGesture} from "./gestures/five";
 import {equalsGesture} from "./gestures/equals";
 
-
-
-
 function App() {
 
   const webcamRef = useRef(null);
@@ -29,7 +26,6 @@ function App() {
   // const [comp, setComp] = useState('');
   const [data, setData] = useState({comps: []})
   
-  let operator = false
   let count = 0; //stores the amount of times a gesture has been seen
   let handStates = [] //stores the landmark info; gets cleared when count reverts to zero
   //when count is at last value, it runs a function on the handStates
@@ -48,14 +44,15 @@ function App() {
     console.log('Beginning Detection')
     setInterval(() => {
       detect(detector)
-    }, 1000) //can make really fast if needed...
+    }, 100) //can make really fast if needed...
   }
   const detect = async (detector) => {
     if (
       typeof webcamRef.current !== "undefined" &&
       webcamRef.current !== null &&
       webcamRef.current.video.readyState === 4
-    ) {
+      ) 
+    {
       // Get Video Properties
       const video = webcamRef.current.video;
       const videoWidth = webcamRef.current.video.videoWidth;
@@ -69,22 +66,10 @@ function App() {
       //if it doesn't detect a hand, it should reset the count and handStates
       if(hands.length > 0){
         //iterate over each hand
-        // console.log(hands)
-        let total = null
+        //add to count whenever hands are present
+        count += 1;
+        console.log('count:', count)
         for(let hand of hands){
-          // console.log(hand)
-          // console.log('Getting gestures..')
-          const GE = new fp.GestureEstimator([
-            // equalsGesture,
-            zeroGesture,
-            oneGesture,
-            twoGesture,
-            threeGesture,
-            fourGesture,
-            fiveGesture,
-            // equalsGesture
-          ])
-
           //convert the keypoints to 'landmarks'
           const landmarks = []
           const wristZ = hand.keypoints3D[0].z
@@ -96,72 +81,94 @@ function App() {
             arr.push(dif)
             landmarks.push(arr)
           }
-
           handStates.push(landmarks);
-          
-          
-          // if(count >=5){
-          //   const gestures = handStates.map((landmark) => {
-          //     const gesture = GE.estimate(landmark, 4) //revert to 4
-          //     console.log(gesture)
-          //     if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
-          //         const confidence = gesture.gestures.map(
-          //           (prediction) => prediction.score
-          //         );
-          //         const maxConfidence = confidence.indexOf(
-          //           Math.max.apply(null, confidence)
-          //         ); 
-          //         return gesture.gestures[maxConfidence].name
-          //     }  
-          //   })
-
-          //   //gestures collected
-          //   console.log(gestures)
-
-          //   handStates.length = 0
-          //   count = 0
-          // }
-
-
-
-          // --------------OLD DETECTION CODE---------------
-          const gesture = await GE.estimate(landmarks, 4);
-          if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
-  
-            const confidence = gesture.gestures.map(
-              (prediction) => prediction.score
-            );
-            const maxConfidence = confidence.indexOf(
-              Math.max.apply(null, confidence)
-            ); //gets the index of the gesture with the max certainty
-            // console.log(gesture.gestures[maxConfidence].name)
-            //This is where the math can happen... 
-            if(total === null){
-              total = gesture.gestures[maxConfidence].name
-            }else{
-              total += gesture.gestures[maxConfidence].name
-            }
-
-          }
         }
+      }
 
-        //do digit first, then if no math, add symbol; then, do equals, and set new line to outcome... otherwise clear
-        //total set based on outcome of count function
-        if(total != null && operator == false){
+      if(count >= 20){
+        const GE = new fp.GestureEstimator([
+          zeroGesture,
+          oneGesture,
+          twoGesture,
+          threeGesture,
+          fourGesture,
+          fiveGesture,
+          equalsGesture
+        ])
+        const gestures = handStates.map((landmark) => {
+          const gesture = GE.estimate(landmark, 4) //revert to 4
+          if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+              const confidence = gesture.gestures.map(
+                (prediction) => prediction.score
+              );
+              const maxConfidence = confidence.indexOf(
+                Math.max.apply(null, confidence)
+              ); 
+            return gesture.gestures[maxConfidence].name
+          }  
+        })
+        //gestures collected
+        console.log('CountGestures: ', gestures)
+        //figure out if gesture is with two hands or 
+        const maxGesture = getMode(gestures)
+        //gets other max
+        let otherGesture;
+        let maxCount = 0;
+        if(gestures.length > 25){
+          let otherGesture = getMode(gestures.filter(n => {  
+            if(n == maxGesture){
+              maxCount += 1;
+              if(maxCount < 20){
+                return false
+              }
+            }else{
+              return true
+            };
+          }));
+        }
+        // EXECUTING ACTIONS
+
+        //equals present
+        if(maxGesture == 'equals' || otherGesture == 'equals'){
+          equals()
+        }else{
+          let total = 0;
+          if(typeof otherGesture == 'undefined'){
+            total += maxGesture
+          }else{
+            total += (maxGesture + otherGesture)
+          }
           const comps = data['comps']
-          // console.log('Comps' + comps)
           if(comps.length === 0){
             comps.push(total.toString())
           }else{
             comps[comps.length - 1] = comps[comps.length - 1] + total.toString()
           }
           setData({comps: comps})
-        } else if (operator){
-          //handle plus, multiply, subtract, and divide first... then do equals
         }
+        //reset everything
+        handStates.length = 0
+        count = 0
       }
     }
   }
+
+  const getMode = (arr) => {
+    let maxcount = 0;
+    let element_having_max_freq;
+    for (let i = 0; i < arr.length; i++) {
+        let count = 0;
+        for (let j = 0; j < arr.length; j++) {
+            if (arr[i] === arr[j])
+                count++;
+        }
+        if (count > maxcount) {
+            maxcount = count;
+            element_having_max_freq = arr[i];
+        }
+    }
+    return element_having_max_freq;
+}
   const add = () => {
     const comps = data['comps']
     comps[comps.length - 1] = comps[comps.length - 1] + '+'
@@ -182,16 +189,6 @@ function App() {
     comps[comps.length - 1] = comps[comps.length - 1] + '/'
     setData({comps: comps})
   }
-
-  const calculate = (str='') => {
-      let tot = 0;
-      str = str.match(/[+\−]*(\.\d+|\d+(\.\d+)?)/g) || [];
-      while (str.length) {
-         tot += parseFloat(str.shift());
-      };
-      return tot;
-  }
-
 
 
   const equals = () => {

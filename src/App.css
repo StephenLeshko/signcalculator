@@ -84,7 +84,9 @@ p{
 
 
 .App-header {
-  background-color: #ef89c4;
+  /* background-color: #ef89c4; */
+  background-color: #202A44;
+
   min-height: 100vh;
   /* display: flex; */
   margin:0;
