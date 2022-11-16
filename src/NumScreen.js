@@ -3,11 +3,18 @@ import React, {useEffect, useRef} from "react";
 
 function NumScreen({comps}){
     const screenRef = useRef(null)
+    
+    
     useEffect(() =>{
         console.log('resetting scroll')
         // screenRef.current.scrollTop = screenRef.current.scrollHeight
-        // screenRef.current.scrollLeft = screenRef.current.scrollWidth
-    })
+        screenRef.current.scrollLeft = screenRef.current.scrollWidth
+    }, [comps[comps.length - 1]])
+
+    useEffect(() =>{
+        console.log('height change')
+        screenRef.current.scrollTop = screenRef.current.scrollHeight
+    }, [comps.length])
     
     const showComps = (comp) =>{
         return (

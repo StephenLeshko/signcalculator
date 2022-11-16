@@ -29,17 +29,15 @@ function App() {
   // const [comp, setComp] = useState('');
   const [data, setData] = useState({comps: []})
   
+  let operator = false
   let count = 0; //stores the amount of times a gesture has been seen
   let handStates = [] //stores the landmark info; gets cleared when count reverts to zero
   //when count is at last value, it runs a function on the handStates
   //function checks to see what kind of movement is going on...
   //After this happens, count is changed, screen state is updated
-  
 
 
   //creating detector
-  
-
   const guessHands = async () => {
     const model = handPoseDetection.SupportedModels.MediaPipeHands;
     const detectorConfig = {
@@ -50,7 +48,7 @@ function App() {
     console.log('Beginning Detection')
     setInterval(() => {
       detect(detector)
-    }, 1000)
+    }, 1000) //can make really fast if needed...
   }
   const detect = async (detector) => {
     if (
@@ -67,10 +65,8 @@ function App() {
       webcamRef.current.video.width = videoWidth;
       webcamRef.current.video.height = videoHeight;
 
-      // Set canvas height and width
-      // canvasRef.current.width = videoWidth;
-      // canvasRef.current.height = videoHeight;
       const hands = await detector.estimateHands(video)
+      //if it doesn't detect a hand, it should reset the count and handStates
       if(hands.length > 0){
         //iterate over each hand
         // console.log(hands)
@@ -79,13 +75,14 @@ function App() {
           // console.log(hand)
           // console.log('Getting gestures..')
           const GE = new fp.GestureEstimator([
+            // equalsGesture,
             zeroGesture,
             oneGesture,
             twoGesture,
             threeGesture,
             fourGesture,
             fiveGesture,
-            equalsGesture
+            // equalsGesture
           ])
 
           //convert the keypoints to 'landmarks'
@@ -101,81 +98,136 @@ function App() {
           }
 
           handStates.push(landmarks);
-          count += 1;
           
-          if(count >=5){
-            const gestures = handStates.map((landmark) => {
-              const gesture = GE.estimate(landmark, 4)
-              console.log(gesture)
-              if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
-                  const confidence = gesture.gestures.map(
-                    (prediction) => prediction.score
-                  );
-                  const maxConfidence = confidence.indexOf(
-                    Math.max.apply(null, confidence)
-                  ); 
-                  return gesture.gestures[maxConfidence].name
-  
-              }  
-            })
-            console.log(gestures)
-            handStates.length = 0
-            count = 0
-          }
+          
+          // if(count >=5){
+          //   const gestures = handStates.map((landmark) => {
+          //     const gesture = GE.estimate(landmark, 4) //revert to 4
+          //     console.log(gesture)
+          //     if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+          //         const confidence = gesture.gestures.map(
+          //           (prediction) => prediction.score
+          //         );
+          //         const maxConfidence = confidence.indexOf(
+          //           Math.max.apply(null, confidence)
+          //         ); 
+          //         return gesture.gestures[maxConfidence].name
+          //     }  
+          //   })
+
+          //   //gestures collected
+          //   console.log(gestures)
+
+          //   handStates.length = 0
+          //   count = 0
+          // }
 
 
 
           // --------------OLD DETECTION CODE---------------
-
-          // const gesture = await GE.estimate(landmarks, 4);
-          // // console.log('Gesture: ')
-          // // console.log(gesture)
-          // if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
+          const gesture = await GE.estimate(landmarks, 4);
+          if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
   
-          //   const confidence = gesture.gestures.map(
-          //     (prediction) => prediction.score
-          //   );
-          //   const maxConfidence = confidence.indexOf(
-          //     Math.max.apply(null, confidence)
-          //   ); //gets the index of the gesture with the max certainty
-          //   // console.log(gesture.gestures[maxConfidence].name)
+            const confidence = gesture.gestures.map(
+              (prediction) => prediction.score
+            );
+            const maxConfidence = confidence.indexOf(
+              Math.max.apply(null, confidence)
+            ); //gets the index of the gesture with the max certainty
+            // console.log(gesture.gestures[maxConfidence].name)
+            //This is where the math can happen... 
+            if(total === null){
+              total = gesture.gestures[maxConfidence].name
+            }else{
+              total += gesture.gestures[maxConfidence].name
+            }
 
-
-          //   //This is where the math can happen... 
-          //   if(total === null){
-          //     total = gesture.gestures[maxConfidence].name
-          //   }else{
-          //     total += gesture.gestures[maxConfidence].name
-          //   }
-
-          // }
+          }
         }
 
-        //setting
-        if(total != null){
-          console.log('Total: ' + String(total))
-          
+        //do digit first, then if no math, add symbol; then, do equals, and set new line to outcome... otherwise clear
+        //total set based on outcome of count function
+        if(total != null && operator == false){
           const comps = data['comps']
           // console.log('Comps' + comps)
           if(comps.length === 0){
             comps.push(total.toString())
-          }else if(comps[comps.length - 1].length > 30){
-            comps.push(total.toString())
           }else{
             comps[comps.length - 1] = comps[comps.length - 1] + total.toString()
           }
-
           setData({comps: comps})
-          // setComp((value) => {
-          //   return value + total.toString();
-          // })
+        } else if (operator){
+          //handle plus, multiply, subtract, and divide first... then do equals
         }
       }
     }
   }
-  useEffect(()=>{guessHands()},[]);
+  const add = () => {
+    const comps = data['comps']
+    comps[comps.length - 1] = comps[comps.length - 1] + '+'
+    setData({comps: comps})
+  }
+  const subtract = () => {
+    const comps = data['comps']
+    comps[comps.length - 1] = comps[comps.length - 1] + '-'
+    setData({comps: comps})
+  }
+  const multiply = () => {
+    const comps = data['comps']
+    comps[comps.length - 1] = comps[comps.length - 1] + '*'
+    setData({comps: comps})
+  }
+  const divide = () => {
+    const comps = data['comps']
+    comps[comps.length - 1] = comps[comps.length - 1] + '/'
+    setData({comps: comps})
+  }
 
+  const calculate = (str='') => {
+      let tot = 0;
+      str = str.match(/[+\−]*(\.\d+|\d+(\.\d+)?)/g) || [];
+      while (str.length) {
+         tot += parseFloat(str.shift());
+      };
+      return tot;
+  }
+
+
+
+  const equals = () => {
+    const comps = data['comps']
+    const tot = eval(comps[comps.length - 1])
+    comps.push(tot.toString())
+    setData({comps: comps})
+  }
+
+
+  useEffect(()=>{guessHands()},[]);
   // guessHands()
+
+  const findOperator = () => {
+    const operators = ['add', 'subtract', 'multiply', 'divide', 'clear']
+    return null
+  }
+
+  const findMode = (lst) =>{
+    const vals = {
+      0:0,
+      1:0,
+      2:0,
+      3:0,
+      4:0,
+      5:0,
+      'equals':0
+    }
+    for(let num of lst){
+      vals[num] += 1
+    }
+    return 
+  }
+
+
+
 
 
   /*        RETURN VALUE         */
@@ -190,6 +242,13 @@ function App() {
         />
         <NumScreen className="elm-border" comps={data['comps']}/>
       </div>
+      <button onClick={add}>Add</button>
+      <button onClick={subtract}>Subtract</button>
+      <button onClick={multiply}>Multiply</button>
+      <button onClick={divide}>Divide</button>
+      <button onClick={equals}>Equals</button>
+
+
       <h1 className="title-text">Sign Calc</h1>
       <p className="explanation">Use your fingers and hand motions to perform computations</p>
       </header>
@@ -198,3 +257,4 @@ function App() {
 }
 
 export default App;
+
